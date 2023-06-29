@@ -1,6 +1,6 @@
 # Twelon Musk: A Twitter Odyssey
 
-![twelon-musk](https://i.imgur.com/4bGGCOh.png)
+![twelon-musk](https://i.imgur.com/kfTIYca.png)
 
 ## Overview
 Welcome to Twelon Musk, the mind-bending data visualization that takes you on an intergalactic journey through the tweets of the one and only Elon Musk. Brace yourself for a cosmic rollercoaster of tweets, where Elon's thoughts transcend the boundaries of Earth and venture into uncharted territories.

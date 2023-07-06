@@ -47,6 +47,9 @@
         font-family: "Helvetica Neue", sans-serif;
         font-size: 14px;
         box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.25);
+        max-height: 400px;
+        overflow-y: auto;
+        overflow-x: hidden;
       }
       .tooltip p {
         margin: 0;
@@ -57,7 +60,7 @@
     </style>
   </head>
   <body>
-    <h1 style="color: white;">Twelon Musk</h1>
+    <h1 style="color: white">Twelon Musk</h1>
     <svg id="linegraph" width="1800" height="600"></svg>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -134,8 +137,10 @@
           .attr("cy", (d) => yScale(d.count))
           .attr("r", 5)
           .attr("fill", (d) => colorScale(d.count))
-          .on("mouseover", showTooltip)
-          .on("mouseout", hideTooltip);
+          .on("mouseover", function (event, d) {
+            hideTooltip();
+            showTooltip(event, d);
+          });
 
         // Define the axes
         const xAxis = d3.axisBottom(xScale);
@@ -157,10 +162,24 @@
           .style("opacity", 0);
 
         function showTooltip(event, d) {
+          const tooltipBox = tooltip.node().getBoundingClientRect(); // get the size of the tooltip
+          let left = event.pageX + 10;
+          let top = event.pageY + 10;
+
+          // Check if the tooltip will go off the right side of the screen
+          if (left + tooltipBox.width > window.innerWidth) {
+            left -= tooltipBox.width + 20; // shift it to the left
+          }
+
+          // Check if the tooltip will go off the bottom of the screen
+          if (top + tooltipBox.height > window.innerHeight) {
+            top -= tooltipBox.height + 20; // shift it to the top
+          }
+
           tooltip
             .style("opacity", 1)
-            .style("left", event.pageX + 10 + "px")
-            .style("top", event.pageY + 10 + "px").html(`
+            .style("left", left + "px")
+            .style("top", top + "px").html(`
                 <b>Date/Time:</b> ${d.date}<br>
                 <b>Tweet Count:</b> ${d.count}<br>
                 <b>Tweet Text:</b> <br>
@@ -200,7 +219,7 @@
         // Define the zoom function
         const zoom = d3
           .zoom()
-          .scaleExtent([1, 10])
+          .scaleExtent([0.1, 10])
           .extent([
             [0, 0],
             [width, height],

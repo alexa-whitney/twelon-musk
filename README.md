@@ -13,6 +13,15 @@ Elon Musk, the visionary genius or eccentric madman (depends on who you ask), ha
 - **Counting Elon's Blabber**: Witness the relentless onslaught of tweets as Elon Musk single-handedly tries to break the internet, one character at a time.
 - **Hover for Elon's Wisdom**: Hover over any tweet to uncover Elon's peculiar blend of genius, madness, and questionable humor. Brace yourself for mind-boggling insights or facepalm-worthy moments.
 
+## Data Visualization Questions
+This visualization can help answer the following questions:
+
+1. **When was Elon Musk's tweeting activity the highest?**
+2. **When was Elon Musk's tweeting activity the lowest?**
+3. **What is the overall trend of Elon Musk's tweeting activity over time?**
+4. **Are there any patterns or regularities in Elon Musk's tweeting activity?**
+5. **What was the content of the tweets at a particular point in time?**
+
 ## Warning: Elon's Quirks Ahead
 Caution: This visualization may cause unexpected bouts of laughter, confusion, or existential pondering. Proceed at your own risk. The creator of this visualization shall not be held responsible for any sudden urges to build rockets, revolutionize transportation, or form an AI-led dystopian society.
 

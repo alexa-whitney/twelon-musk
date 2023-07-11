@@ -63,8 +63,11 @@
     <h1 style="color: white">Twelon Musk</h1>
     <svg id="linegraph" width="1800" height="600"></svg>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.33/moment-timezone-with-data.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
+      // Load and preprocess your data here
       // Load and preprocess your data here
       d3.csv("elonmusk.csv").then((data) => {
         // Set up the SVG container and dimensions
@@ -79,18 +82,25 @@
         });
 
         // Group the tweets by date
-        const tweetCounts = d3.rollup(
-          data,
-          (v) => ({ count: v.length, texts: v.map((d) => d.Text) }),
-          (d) => d3.timeDay(d.Datetime)
-        );
+        const tweetGroups = d3.groups(data, (d) => d3.timeDay(d.Datetime));
 
-        // Convert the grouped data to an array of objects
-        const tweetData = Array.from(tweetCounts, ([date, value]) => ({
-          date,
-          count: value.count,
-          text: value.texts.join("\n"),
-        }));
+        // Create a new array to hold the processed data
+        const tweetData = [];
+
+        // Process each group
+        tweetGroups.forEach(([date, tweets]) => {
+          // Sort the tweets by the time part of the datetime
+          tweets.sort((a, b) => d3.ascending(a.Datetime, b.Datetime));
+
+          // Add each tweet to the data array
+          tweets.forEach((d, i) => {
+            tweetData.push({
+              date: d.Datetime, // Use the original timestamp
+              count: i + 1, // The count is the order of the tweet in the day
+              text: d.Text, // The tweet text
+            });
+          });
+        });
 
         // Set up the SVG element
         const svg = d3
@@ -98,21 +108,30 @@
           .append("g")
           .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+        // Define your date range
+        const startDate = new Date(2016, 0, 1);
+        const endDate = new Date(2023, 11, 31);
+
+        // Filter your data to only include dates within the range
+        const filteredData = tweetData.filter(
+          (d) => d.date >= startDate && d.date <= endDate
+        );
+
         // Define color scale
         const colorScale = d3
           .scaleSequential()
-          .domain([0, d3.max(tweetData, (d) => d.count)])
+          .domain([0, d3.max(filteredData, (d) => d.count)])
           .interpolator(d3.interpolatePlasma);
 
         // Define the scales for x and y axes
         const xScale = d3
           .scaleTime()
-          .domain(d3.extent(tweetData, (d) => d.date))
+          .domain([startDate, endDate]) // Set the domain to the years 2017 - 2023
           .range([0, width]);
 
         const yScale = d3
           .scaleLinear()
-          .domain([0, d3.max(tweetData, (d) => d.count)])
+          .domain([0, d3.max(filteredData, (d) => d.count)])
           .range([height, 0]);
 
         // Define the line generator
@@ -124,14 +143,14 @@
         // Add the line path
         svg
           .append("path")
-          .datum(tweetData)
+          .datum(filteredData)
           .attr("class", "line") // changed from inline style to class
           .attr("d", line);
 
         // Add circles to represent each tweet count
         const circles = svg
           .selectAll("circle")
-          .data(tweetData)
+          .data(filteredData)
           .join("circle")
           .attr("cx", (d) => xScale(d.date))
           .attr("cy", (d) => yScale(d.count))
@@ -176,15 +195,26 @@
             top -= tooltipBox.height + 20; // shift it to the top
           }
 
+          // Format the date and time
+          const dateString = moment
+            .utc(d.date)
+            .tz("America/Denver")
+            .format("MMMM D, YYYY");
+          const timeString = moment
+            .utc(d.date)
+            .tz("America/Denver")
+            .format("h:mm:ssA [MST]");
+
           tooltip
             .style("opacity", 1)
             .style("left", left + "px")
             .style("top", top + "px").html(`
-                <b>Date/Time:</b> ${d.date}<br>
-                <b>Tweet Count:</b> ${d.count}<br>
-                <b>Tweet Text:</b> <br>
-                <p>${d.text}</p>
-              `);
+              <b>Date:</b> ${dateString}<br>
+              <b>Time:</b> ${timeString}<br>
+              <b>Tweet Count:</b> ${d.count}<br>
+              <b>Tweet Text:</b> <br>
+              <p>${d.text}</p>
+            `);
         }
 
         function hideTooltip() {
@@ -229,17 +259,19 @@
         svg.call(zoom);
 
         function zoomed(event) {
-          // create new scale ojects based on event
+          // create new scale objects based on event
           const newXScale = event.transform.rescaleX(xScale);
           const newYScale = event.transform.rescaleY(yScale);
 
-          // update axes
-          gxAxis.call(xAxis.scale(newXScale));
-          gyAxis.call(yAxis.scale(newYScale));
+          // update axes with transition
+          gxAxis.transition().duration(500).call(xAxis.scale(newXScale));
+          gyAxis.transition().duration(500).call(yAxis.scale(newYScale));
 
-          svg.attr("transform", event.transform);
+          // Apply transform to the line and circles with transition
           svg
             .selectAll("circle")
+            .transition()
+            .duration(500)
             .attr("r", 5 / Math.sqrt(event.transform.k))
             .attr("cx", function (d) {
               return newXScale(d.date);
@@ -250,6 +282,8 @@
 
           svg
             .selectAll(".line")
+            .transition()
+            .duration(500)
             .attr("stroke-width", 2 / event.transform.k)
             .attr(
               "d",
